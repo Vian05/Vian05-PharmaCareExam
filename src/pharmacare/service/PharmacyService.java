@@ -38,14 +38,14 @@ public class PharmacyService {
     public void updateMedicine(String id, String name, String description,
                                BigDecimal price, Integer maxPurchaseQuantity) {
         Medicine medicine = requireMedicine(id);
+        if (medicine instanceof LimitedMedicine && maxPurchaseQuantity == null) {
+            throw new IllegalArgumentException("A purchase limit is required for this medicine.");
+        }
         medicine.setName(name);
         medicine.setDescription(description);
         medicine.setPrice(price);
 
         if (medicine instanceof LimitedMedicine limitedMedicine) {
-            if (maxPurchaseQuantity == null) {
-                throw new IllegalArgumentException("A purchase limit is required for this medicine.");
-            }
             limitedMedicine.setMaxPurchaseQuantity(maxPurchaseQuantity);
         }
     }
