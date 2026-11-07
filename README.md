@@ -23,15 +23,27 @@ src/
     │   ├── PrescriptionMedicine.java
     │   ├── Customer.java
     │   ├── CartItem.java
-    │   └── ShoppingCart.java
+    │   ├── ShoppingCart.java
+    │   ├── Prescription.java
+    │   └── PrescriptionStatus.java
+    ├── payment/
+    │   ├── PaymentMethod.java
+    │   ├── CashPayment.java
+    │   ├── CardPayment.java
+    │   └── QRISPayment.java
     └── service/
-        └── PharmacyService.java
+        ├── PharmacyService.java
+        ├── PrescriptionService.java
+        └── CheckoutService.java
 ```
 
 ## Current features
-- Pharmacist: medicine CRUD, restocking, and low-stock report.
-- Customer: browse catalog, add/remove cart items, update quantities, and view cart subtotal.
-- Prescription medicines can be added to the cart; prescription approval is required at checkout and will be implemented in a later milestone.
+- Pharmacist: medicine CRUD, restocking, low-stock report, prescription list, and prescription approval/rejection.
+- Customer: browse catalog, shopping cart management, submit a prescription file path, and checkout.
+- Obat Keras checkout is blocked until a pharmacist approves a submitted prescription.
+- An approved prescription is marked consumed after successful checkout.
+- Payment options: Cash (0% fee), Card (2% fee), and QRIS (0.7% fee). These are simulation assumptions for the assignment, not official provider rates.
+- Payment is simulated as successful; no external payment gateway or real file upload is connected.
 
 ## Compile and run
 
