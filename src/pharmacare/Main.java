@@ -28,6 +28,7 @@ public class Main {
     private static final PrescriptionService PRESCRIPTION_SERVICE = new PrescriptionService();
     private static final CheckoutService CHECKOUT_SERVICE = new CheckoutService();
     private static final int LOW_STOCK_THRESHOLD = 10;
+    private static int customerSequence = 1;
 
     public static void main(String[] args) {
         seedSampleMedicines();
@@ -190,7 +191,7 @@ public class Main {
     /** Starts a customer session with a new in-memory shopping cart. */
     private static void customerMenu() {
         String customerName = InputHelper.readNonEmpty(SCANNER, "Customer name: ");
-        Customer customer = new Customer("CUST-001", customerName);
+        Customer customer = new Customer("CUST-" + customerSequence++, customerName);
         ShoppingCart cart = new ShoppingCart();
         boolean inMenu = true;
 
