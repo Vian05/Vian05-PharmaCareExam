@@ -25,7 +25,10 @@ src/
     │   ├── CartItem.java
     │   ├── ShoppingCart.java
     │   ├── Prescription.java
-    │   └── PrescriptionStatus.java
+    │   ├── PrescriptionStatus.java
+    │   ├── Transaction.java
+    │   ├── TransactionItem.java
+    │   └── TransactionStatus.java
     ├── payment/
     │   ├── PaymentMethod.java
     │   ├── CashPayment.java
@@ -39,11 +42,13 @@ src/
 
 ## Current features
 - Pharmacist: medicine CRUD, restocking, low-stock report, prescription list, and prescription approval/rejection.
-- Customer: enter a reusable customer ID, browse catalog, manage shopping cart, submit a prescription file path, and checkout.
+- Customer: enter a reusable customer ID, browse catalog, manage shopping cart, submit a prescription file path for a specific Obat Keras medicine, checkout, and view transaction history.
 - Obat Keras checkout is blocked until a pharmacist approves a submitted prescription.
 - An approved prescription is marked consumed after successful checkout.
 - Payment options: Cash (0% fee), Card (2% fee), and QRIS (0.7% fee). These are simulation assumptions for the assignment, not official provider rates.
+- Pharmacist: daily and monthly sales reports with transaction count, revenue, top three best-selling medicines, and payment method breakdown.
 - Payment is simulated as successful; no external payment gateway or real file upload is connected.
+- Transaction history and reports are stored in memory and reset when the application exits.
 
 ## Compile and run
 
