@@ -5,9 +5,17 @@ import pharmacare.model.Customer;
 import pharmacare.model.FreeMedicine;
 import pharmacare.model.LimitedMedicine;
 import pharmacare.model.Medicine;
+import pharmacare.model.Prescription;
 import pharmacare.model.PrescriptionMedicine;
+import pharmacare.model.PrescriptionStatus;
 import pharmacare.model.ShoppingCart;
+import pharmacare.service.CheckoutService;
 import pharmacare.service.PharmacyService;
+import pharmacare.service.PrescriptionService;
+import pharmacare.payment.CashPayment;
+import pharmacare.payment.CardPayment;
+import pharmacare.payment.PaymentMethod;
+import pharmacare.payment.QRISPayment;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -17,6 +25,8 @@ import java.util.Scanner;
 public class Main {
     private static final Scanner SCANNER = new Scanner(System.in);
     private static final PharmacyService PHARMACY_SERVICE = new PharmacyService();
+    private static final PrescriptionService PRESCRIPTION_SERVICE = new PrescriptionService();
+    private static final CheckoutService CHECKOUT_SERVICE = new CheckoutService();
     private static final int LOW_STOCK_THRESHOLD = 10;
 
     public static void main(String[] args) {
@@ -70,8 +80,10 @@ public class Main {
             System.out.println("4. Delete Medicine");
             System.out.println("5. Restock Medicine");
             System.out.println("6. Low Stock Report (< " + LOW_STOCK_THRESHOLD + ")");
+            System.out.println("7. View Prescriptions");
+            System.out.println("8. Review Prescription");
             System.out.println("0. Back to Main Menu");
-            int choice = InputHelper.readIntInRange(SCANNER, "Select menu: ", 0, 6);
+            int choice = InputHelper.readIntInRange(SCANNER, "Select menu: ", 0, 8);
             try {
                 switch (choice) {
                     case 1 -> addMedicineMenu();
@@ -80,6 +92,8 @@ public class Main {
                     case 4 -> deleteMedicineMenu();
                     case 5 -> restockMedicineMenu();
                     case 6 -> displayMedicines(PHARMACY_SERVICE.getLowStockMedicines(LOW_STOCK_THRESHOLD));
+                    case 7 -> displayPrescriptions();
+                    case 8 -> reviewPrescriptionMenu();
                     case 0 -> inMenu = false;
                     default -> System.out.println("Invalid menu selection.");
                 }
@@ -187,8 +201,10 @@ public class Main {
             System.out.println("3. View Shopping Cart");
             System.out.println("4. Update Cart Quantity");
             System.out.println("5. Remove Medicine from Cart");
+            System.out.println("6. Submit Prescription");
+            System.out.println("7. Checkout");
             System.out.println("0. Back to Main Menu");
-            int choice = InputHelper.readIntInRange(SCANNER, "Select menu: ", 0, 5);
+            int choice = InputHelper.readIntInRange(SCANNER, "Select menu: ", 0, 7);
 
             try {
                 switch (choice) {
@@ -197,6 +213,8 @@ public class Main {
                     case 3 -> displayCart(cart);
                     case 4 -> updateCartMenu(cart);
                     case 5 -> removeFromCartMenu(cart);
+                    case 6 -> submitPrescriptionMenu(customer);
+                    case 7 -> checkoutMenu(customer, cart);
                     case 0 -> inMenu = false;
                     default -> System.out.println("Invalid menu selection.");
                 }
@@ -245,6 +263,71 @@ public class Main {
         int quantity = InputHelper.readIntInRange(SCANNER, "New quantity: ", 1, Integer.MAX_VALUE);
         cart.updateQuantity(id, quantity);
         System.out.println("Cart quantity updated.");
+    }
+
+
+    /** Registers a simulated prescription file path for pharmacist review. */
+    private static void submitPrescriptionMenu(Customer customer) {
+        String filePath = InputHelper.readNonEmpty(SCANNER, "Prescription file path: ");
+        Prescription prescription = PRESCRIPTION_SERVICE.submitPrescription(customer.getId(), filePath);
+        System.out.println("Prescription submitted. Reference ID: " + prescription.getId());
+        System.out.println("Status: PENDING. Pharmacist approval is required before checkout.");
+    }
+
+    /** Displays submitted prescriptions for pharmacist review. */
+    private static void displayPrescriptions() {
+        List<Prescription> prescriptions = PRESCRIPTION_SERVICE.getAllPrescriptions();
+        if (prescriptions.isEmpty()) {
+            System.out.println("No prescriptions submitted.");
+            return;
+        }
+        System.out.println("\nPrescription ID | Customer ID | File Path | Status");
+        for (Prescription prescription : prescriptions) {
+            System.out.printf("%s | %s | %s | %s%n", prescription.getId(),
+                    prescription.getCustomerId(), prescription.getFilePath(), prescription.getStatus());
+        }
+    }
+
+    /** Approves or rejects a pending prescription. */
+    private static void reviewPrescriptionMenu() {
+        displayPrescriptions();
+        String id = InputHelper.readNonEmpty(SCANNER, "Prescription ID to review: ");
+        System.out.println("1. Approve  2. Reject");
+        int decision = InputHelper.readIntInRange(SCANNER, "Select decision: ", 1, 2);
+        PrescriptionStatus status = decision == 1 ? PrescriptionStatus.APPROVED : PrescriptionStatus.REJECTED;
+        PRESCRIPTION_SERVICE.reviewPrescription(id, status);
+        System.out.println("Prescription " + id + " marked as " + status + ".");
+    }
+
+    /** Selects a payment method, shows the fee, and processes checkout. */
+    private static void checkoutMenu(Customer customer, ShoppingCart cart) {
+        if (cart.isEmpty()) {
+            System.out.println("Shopping cart is empty.");
+            return;
+        }
+        displayCart(cart);
+        System.out.println("Payment method: 1. Cash (0%)  2. Card (2%)  3. QRIS (0.7%)");
+        int choice = InputHelper.readIntInRange(SCANNER, "Select payment method: ", 1, 3);
+        PaymentMethod paymentMethod = switch (choice) {
+            case 1 -> new CashPayment();
+            case 2 -> new CardPayment();
+            case 3 -> new QRISPayment();
+            default -> throw new IllegalStateException("Unexpected payment method.");
+        };
+        BigDecimal subtotal = cart.getSubtotal();
+        BigDecimal fee = CHECKOUT_SERVICE.calculateFee(cart, paymentMethod);
+        BigDecimal total = subtotal.add(fee);
+        System.out.println("Subtotal: IDR " + subtotal.toPlainString());
+        System.out.println("Payment fee (" + paymentMethod.getName() + "): IDR " + fee.toPlainString());
+        System.out.println("Total: IDR " + total.toPlainString());
+        String confirm = InputHelper.readNonEmpty(SCANNER, "Confirm payment (Y/N): ");
+        if (!confirm.equalsIgnoreCase("Y")) {
+            System.out.println("Checkout cancelled. Cart and stock remain unchanged.");
+            return;
+        }
+        BigDecimal paidTotal = CHECKOUT_SERVICE.checkout(customer, cart, PRESCRIPTION_SERVICE, paymentMethod);
+        System.out.println("Payment successful. Paid: IDR " + paidTotal.toPlainString());
+        System.out.println("Order completed. Stock has been updated.");
     }
 
     /** Removes a selected medicine from the shopping cart. */
