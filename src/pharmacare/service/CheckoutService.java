@@ -38,10 +38,10 @@ public class CheckoutService {
         Transaction transaction = transactionService.recordTransaction(customer, cart.getItems(),
                 paymentMethod.getName(), subtotal, fee, total);
 
-        boolean prescriptionRequired = cart.getItems().stream()
-                .anyMatch(item -> item.getMedicine() instanceof PrescriptionMedicine);
-        if (prescriptionRequired) {
-            prescriptionService.consumeApprovedPrescription(customer.getId());
+        for (CartItem item : cart.getItems()) {
+            if (item.getMedicine() instanceof PrescriptionMedicine) {
+                prescriptionService.consumeApprovedPrescription(customer.getId(), item.getMedicine().getId());
+            }
         }
         for (CartItem item : cart.getItems()) {
             item.getMedicine().reduceStock(item.getQuantity());
@@ -60,8 +60,9 @@ public class CheckoutService {
 
         for (CartItem item : cart.getItems()) {
             if (item.getMedicine() instanceof PrescriptionMedicine
-                    && !prescriptionService.hasApprovedPrescription(customer.getId())) {
-                throw new IllegalArgumentException("An approved prescription is required for Obat Keras.");
+                    && !prescriptionService.hasApprovedPrescription(customer.getId(), item.getMedicine().getId())) {
+                throw new IllegalArgumentException("An approved prescription is required for "
+                        + item.getMedicine().getName() + ".");
             }
             if (item.getQuantity() > item.getMedicine().getStock()) {
                 throw new IllegalArgumentException("Insufficient stock for " + item.getMedicine().getName());
