@@ -36,7 +36,7 @@ javac -d out src\pharmacare\*.java
 java -cp out pharmacare.Main
 ```
 
-## Implementation milestones
+## Current features\n- Pharmacist: medicine CRUD, restocking, and low-stock report.\n- Customer: browse catalog, add/remove cart items, update quantities, and view cart subtotal.\n- Prescription medicines can be added to the cart; prescription approval is required at checkout and will be implemented in a later milestone.\n\n## Implementation milestones
 1. Project foundation and console navigation
 2. Medicine model and pharmacist medicine/stock management
 3. Customer catalog and shopping cart
