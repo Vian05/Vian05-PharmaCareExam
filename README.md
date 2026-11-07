@@ -2,12 +2,46 @@
 
 Java 21 console-based Pharmacy Management System for the LO 3 PharmaCare assignment.
 
-## Planned stack
+## Technology and design
 - Java 21
-- Console application
-- `ArrayList` in-memory storage
-- Object-oriented design (inheritance, encapsulation, polymorphism, abstract class, interface)
+- Console application (CLI)
+- In-memory data storage using `ArrayList` (implemented in later milestones)
+- Object-oriented programming: encapsulation, inheritance, polymorphism, abstract classes, and interfaces
+- No external dependencies or build tool required
 
-## Build and run
+## Project structure
 
-The Maven-free source layout and commands will be documented as the implementation is added.
+```text
+src/
+└── pharmacare/
+    ├── Main.java
+    └── InputHelper.java
+```
+
+## Compile and run
+
+Run these commands from the repository root.
+
+**macOS / Linux**
+```bash
+mkdir -p out
+javac -d out src/pharmacare/*.java
+java -cp out pharmacare.Main
+```
+
+**Windows (Command Prompt)**
+```bat
+if not exist out mkdir out
+javac -d out src\pharmacare\*.java
+java -cp out pharmacare.Main
+```
+
+## Implementation milestones
+1. Project foundation and console navigation
+2. Medicine model and pharmacist medicine/stock management
+3. Customer catalog and shopping cart
+4. Prescription validation and payment methods
+5. Transactions, history, and sales reports
+6. Testing, screenshots, and submission packaging
+
+> Data is held in memory only. Data persistence is not retained after the application exits.
