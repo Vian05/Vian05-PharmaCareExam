@@ -42,6 +42,11 @@ public class CheckoutService {
             throw new IllegalStateException("Payment was unsuccessful. Stock was not changed.");
         }
 
+        boolean prescriptionRequired = cart.getItems().stream()
+                .anyMatch(item -> item.getMedicine() instanceof PrescriptionMedicine);
+        if (prescriptionRequired) {
+            prescriptionService.consumeApprovedPrescription(customer.getId());
+        }
         for (CartItem item : cart.getItems()) {
             item.getMedicine().reduceStock(item.getQuantity());
         }
