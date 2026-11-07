@@ -24,6 +24,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Scanner;
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -206,7 +207,7 @@ public class Main {
         String customerId = InputHelper.readNonEmpty(SCANNER, "Customer ID (reuse the same ID for future sessions): ");
         String customerName = InputHelper.readNonEmpty(SCANNER, "Customer name: ");
         Customer customer = new Customer(customerId, customerName);
-        ShoppingCart cart = CUSTOMER_CARTS.computeIfAbsent(customer.getId().toLowerCase(), key -> new ShoppingCart());
+        ShoppingCart cart = CUSTOMER_CARTS.computeIfAbsent(customer.getId().toLowerCase(Locale.ROOT), key -> new ShoppingCart());
         boolean inMenu = true;
 
         while (inMenu) {
