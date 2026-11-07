@@ -70,6 +70,19 @@ javac -d out $files
 java -cp out pharmacare.Main
 ```
 
+## Automated tests
+
+Run the dependency-free automated test suite from the repository root on macOS or Linux:
+
+```bash
+chmod +x test.sh
+./test.sh
+```
+
+The script compiles the application and tests with the installed JDK, runs the business-logic test suite, prints each result as PASS or FAIL, and returns a non-zero exit code if compilation or any test fails. Tests use isolated in-memory objects; they do not modify application data or require a database.
+
+The suite covers medicine management, stock validation, shopping cart rules, prescription approval and consumption, payment fee calculations, checkout, transaction history, sales summaries, input validation, and interface/polymorphism behavior. Console-menu navigation and visual output still require manual testing.
+
 ## Implementation milestones
 1. Project foundation and console navigation
 2. Medicine model and pharmacist medicine/stock management
