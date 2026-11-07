@@ -174,6 +174,6 @@ public class Main {
     private static void customerMenu() {
         System.out.println("\n===== CUSTOMER =====");
         System.out.println("Customer features will be implemented in the next milestone.");
-        InputHelper.readNonEmpty(SCANNER, "Enter any text to return to the main menu: ");
+        InputHelper.pause(SCANNER, "Press Enter to return to the main menu...");
     }
 }
