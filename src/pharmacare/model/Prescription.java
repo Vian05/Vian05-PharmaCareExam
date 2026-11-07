@@ -4,12 +4,14 @@ package pharmacare.model;
 public class Prescription {
     private final String id;
     private final String customerId;
+    private final String medicineId;
     private final String filePath;
     private PrescriptionStatus status;
 
-    public Prescription(String id, String customerId, String filePath) {
+    public Prescription(String id, String customerId, String medicineId, String filePath) {
         this.id = requireText(id, "Prescription ID");
         this.customerId = requireText(customerId, "Customer ID");
+        this.medicineId = requireText(medicineId, "Medicine ID");
         this.filePath = requireText(filePath, "Prescription file path");
         this.status = PrescriptionStatus.PENDING;
     }
@@ -19,6 +21,9 @@ public class Prescription {
 
     /** Returns the customer ID associated with this prescription. */
     public String getCustomerId() { return customerId; }
+
+    /** Returns the medicine ID covered by this prescription. */
+    public String getMedicineId() { return medicineId; }
 
     /** Returns the uploaded file path. */
     public String getFilePath() { return filePath; }
