@@ -324,9 +324,16 @@ public class PharmaCareTest {
 
     private static void testCustomerHistory() {
         TransactionService service = new TransactionService();
-        Transaction trx = completedTransaction("C1", "M1", "Cash", "5000", 1).getAllTransactions().get(0);
-        check(trx.getCustomerId().equals("C1"), "Customer ID snapshot mismatch.");
-        check(service.getCustomerHistory("C1").isEmpty(), "New service should have no history.");
+        ShoppingCart firstCart = new ShoppingCart();
+        firstCart.addMedicine(free("M1", "A", "5000", 10), 1);
+        checkout(firstCart, customer("C1"), new PrescriptionService(), new CashPayment(), service);
+        ShoppingCart secondCart = new ShoppingCart();
+        secondCart.addMedicine(free("M2", "B", "6000", 10), 1);
+        checkout(secondCart, customer("C2"), new PrescriptionService(), new CashPayment(), service);
+        check(service.getCustomerHistory("C1").size() == 1,
+                "Customer C1 should see exactly one transaction.");
+        check(service.getCustomerHistory("C2").size() == 1,
+                "Customer C2 should see exactly one transaction.");
     }
 
     private static void testDailyReport() {
