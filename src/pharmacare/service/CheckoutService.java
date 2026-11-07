@@ -4,6 +4,7 @@ import pharmacare.model.CartItem;
 import pharmacare.model.Customer;
 import pharmacare.model.PrescriptionMedicine;
 import pharmacare.model.ShoppingCart;
+import pharmacare.model.Transaction;
 import pharmacare.payment.PaymentMethod;
 
 import java.math.BigDecimal;
@@ -18,10 +19,12 @@ public class CheckoutService {
     }
 
     /** Processes payment and deducts stock only after simulated payment succeeds. */
-    public BigDecimal checkout(Customer customer, ShoppingCart cart,
-                               PrescriptionService prescriptionService, PaymentMethod paymentMethod) {
+    public Transaction checkout(Customer customer, ShoppingCart cart,
+                                 PrescriptionService prescriptionService, PaymentMethod paymentMethod,
+                                 TransactionService transactionService) {
         if (customer == null) throw new IllegalArgumentException("Customer cannot be null.");
         if (prescriptionService == null) throw new IllegalArgumentException("Prescription service cannot be null.");
+        if (transactionService == null) throw new IllegalArgumentException("Transaction service cannot be null.");
         validateCheckout(customer, cart, prescriptionService);
 
         BigDecimal subtotal = cart.getSubtotal();
@@ -32,6 +35,9 @@ public class CheckoutService {
             throw new IllegalStateException("Payment was unsuccessful. Stock was not changed.");
         }
 
+        Transaction transaction = transactionService.recordTransaction(customer, cart.getItems(),
+                paymentMethod.getName(), subtotal, fee, total);
+
         boolean prescriptionRequired = cart.getItems().stream()
                 .anyMatch(item -> item.getMedicine() instanceof PrescriptionMedicine);
         if (prescriptionRequired) {
@@ -41,7 +47,7 @@ public class CheckoutService {
             item.getMedicine().reduceStock(item.getQuantity());
         }
         cart.clear();
-        return total;
+        return transaction;
     }
 
 
