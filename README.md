@@ -37,7 +37,8 @@ src/
     └── service/
         ├── PharmacyService.java
         ├── PrescriptionService.java
-        └── CheckoutService.java
+        ├── CheckoutService.java
+        └── TransactionService.java
 ```
 
 ## Current features
