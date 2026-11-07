@@ -28,7 +28,6 @@ public class Main {
     private static final PrescriptionService PRESCRIPTION_SERVICE = new PrescriptionService();
     private static final CheckoutService CHECKOUT_SERVICE = new CheckoutService();
     private static final int LOW_STOCK_THRESHOLD = 10;
-    private static int customerSequence = 1;
 
     public static void main(String[] args) {
         seedSampleMedicines();
@@ -190,8 +189,9 @@ public class Main {
 
     /** Starts a customer session with a new in-memory shopping cart. */
     private static void customerMenu() {
+        String customerId = InputHelper.readNonEmpty(SCANNER, "Customer ID (reuse the same ID for future sessions): ");
         String customerName = InputHelper.readNonEmpty(SCANNER, "Customer name: ");
-        Customer customer = new Customer("CUST-" + customerSequence++, customerName);
+        Customer customer = new Customer(customerId, customerName);
         ShoppingCart cart = new ShoppingCart();
         boolean inMenu = true;
 
@@ -307,6 +307,7 @@ public class Main {
             return;
         }
         displayCart(cart);
+        CHECKOUT_SERVICE.validateCheckout(customer, cart, PRESCRIPTION_SERVICE);
         System.out.println("Payment method: 1. Cash (0%)  2. Card (2%)  3. QRIS (0.7%)");
         int choice = InputHelper.readIntInRange(SCANNER, "Select payment method: ", 1, 3);
         PaymentMethod paymentMethod = switch (choice) {
