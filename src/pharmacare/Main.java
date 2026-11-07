@@ -19,6 +19,8 @@ import pharmacare.payment.QRISPayment;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.Scanner;
 
 /** Entry point for the PharmaCare console application. */
@@ -27,6 +29,7 @@ public class Main {
     private static final PharmacyService PHARMACY_SERVICE = new PharmacyService();
     private static final PrescriptionService PRESCRIPTION_SERVICE = new PrescriptionService();
     private static final CheckoutService CHECKOUT_SERVICE = new CheckoutService();
+    private static final Map<String, ShoppingCart> CUSTOMER_CARTS = new HashMap<>();
     private static final int LOW_STOCK_THRESHOLD = 10;
 
     public static void main(String[] args) {
@@ -192,7 +195,7 @@ public class Main {
         String customerId = InputHelper.readNonEmpty(SCANNER, "Customer ID (reuse the same ID for future sessions): ");
         String customerName = InputHelper.readNonEmpty(SCANNER, "Customer name: ");
         Customer customer = new Customer(customerId, customerName);
-        ShoppingCart cart = new ShoppingCart();
+        ShoppingCart cart = CUSTOMER_CARTS.computeIfAbsent(customer.getId().toLowerCase(), key -> new ShoppingCart());
         boolean inMenu = true;
 
         while (inMenu) {
