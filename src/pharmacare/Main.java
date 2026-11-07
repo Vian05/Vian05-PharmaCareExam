@@ -9,9 +9,12 @@ import pharmacare.model.Prescription;
 import pharmacare.model.PrescriptionMedicine;
 import pharmacare.model.PrescriptionStatus;
 import pharmacare.model.ShoppingCart;
+import pharmacare.model.Transaction;
+import pharmacare.model.TransactionItem;
 import pharmacare.service.CheckoutService;
 import pharmacare.service.PharmacyService;
 import pharmacare.service.PrescriptionService;
+import pharmacare.service.TransactionService;
 import pharmacare.payment.CashPayment;
 import pharmacare.payment.CardPayment;
 import pharmacare.payment.PaymentMethod;
@@ -22,6 +25,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Scanner;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.format.DateTimeParseException;
 
 /** Entry point for the PharmaCare console application. */
 public class Main {
@@ -29,6 +35,7 @@ public class Main {
     private static final PharmacyService PHARMACY_SERVICE = new PharmacyService();
     private static final PrescriptionService PRESCRIPTION_SERVICE = new PrescriptionService();
     private static final CheckoutService CHECKOUT_SERVICE = new CheckoutService();
+    private static final TransactionService TRANSACTION_SERVICE = new TransactionService();
     private static final Map<String, ShoppingCart> CUSTOMER_CARTS = new HashMap<>();
     private static final int LOW_STOCK_THRESHOLD = 10;
 
@@ -85,8 +92,10 @@ public class Main {
             System.out.println("6. Low Stock Report (< " + LOW_STOCK_THRESHOLD + ")");
             System.out.println("7. View Prescriptions");
             System.out.println("8. Review Prescription");
+            System.out.println("9. Daily Sales Report");
+            System.out.println("10. Monthly Sales Report");
             System.out.println("0. Back to Main Menu");
-            int choice = InputHelper.readIntInRange(SCANNER, "Select menu: ", 0, 8);
+            int choice = InputHelper.readIntInRange(SCANNER, "Select menu: ", 0, 10);
             try {
                 switch (choice) {
                     case 1 -> addMedicineMenu();
@@ -97,6 +106,8 @@ public class Main {
                     case 6 -> displayMedicines(PHARMACY_SERVICE.getLowStockMedicines(LOW_STOCK_THRESHOLD));
                     case 7 -> displayPrescriptions();
                     case 8 -> reviewPrescriptionMenu();
+                    case 9 -> dailySalesReportMenu();
+                    case 10 -> monthlySalesReportMenu();
                     case 0 -> inMenu = false;
                     default -> System.out.println("Invalid menu selection.");
                 }
@@ -207,8 +218,9 @@ public class Main {
             System.out.println("5. Remove Medicine from Cart");
             System.out.println("6. Submit Prescription");
             System.out.println("7. Checkout");
+            System.out.println("8. Transaction History");
             System.out.println("0. Back to Main Menu");
-            int choice = InputHelper.readIntInRange(SCANNER, "Select menu: ", 0, 7);
+            int choice = InputHelper.readIntInRange(SCANNER, "Select menu: ", 0, 8);
 
             try {
                 switch (choice) {
@@ -219,6 +231,7 @@ public class Main {
                     case 5 -> removeFromCartMenu(cart);
                     case 6 -> submitPrescriptionMenu(customer);
                     case 7 -> checkoutMenu(customer, cart);
+                    case 8 -> displayCustomerHistory(customer);
                     case 0 -> inMenu = false;
                     default -> System.out.println("Invalid menu selection.");
                 }
@@ -330,9 +343,80 @@ public class Main {
             System.out.println("Checkout cancelled. Cart and stock remain unchanged.");
             return;
         }
-        BigDecimal paidTotal = CHECKOUT_SERVICE.checkout(customer, cart, PRESCRIPTION_SERVICE, paymentMethod);
-        System.out.println("Payment successful. Paid: IDR " + paidTotal.toPlainString());
+        Transaction transaction = CHECKOUT_SERVICE.checkout(customer, cart, PRESCRIPTION_SERVICE,
+                paymentMethod, TRANSACTION_SERVICE);
+        System.out.println("Payment successful. Transaction ID: " + transaction.getId());
+        System.out.println("Paid: IDR " + transaction.getTotal().toPlainString());
         System.out.println("Order completed. Stock has been updated.");
+    }
+
+
+    /** Displays completed transactions for the current customer. */
+    private static void displayCustomerHistory(Customer customer) {
+        List<Transaction> history = TRANSACTION_SERVICE.getCustomerHistory(customer.getId());
+        if (history.isEmpty()) {
+            System.out.println("No transaction history found.");
+            return;
+        }
+        System.out.println("\\nTransaction ID | Date/Time | Payment | Total (IDR) | Status");
+        for (Transaction transaction : history) {
+            System.out.printf("%s | %s | %s | %s | %s%n", transaction.getId(),
+                    transaction.getDateTime(), transaction.getPaymentMethod(),
+                    transaction.getTotal().toPlainString(), transaction.getStatus());
+            for (TransactionItem item : transaction.getItems()) {
+                System.out.printf("  - %s x%d = IDR %s%n", item.getMedicineName(),
+                        item.getQuantity(), item.getSubtotal().toPlainString());
+            }
+        }
+    }
+
+    /** Generates a sales report for a selected date. */
+    private static void dailySalesReportMenu() {
+        String value = InputHelper.readNonEmpty(SCANNER, "Report date (YYYY-MM-DD): ");
+        try {
+            LocalDate date = LocalDate.parse(value);
+            displaySalesReport(TRANSACTION_SERVICE.getDailyTransactions(date), "Daily Sales: " + date);
+        } catch (DateTimeParseException exception) {
+            System.out.println("Invalid date. Use YYYY-MM-DD.");
+        }
+    }
+
+    /** Generates a sales report for a selected month. */
+    private static void monthlySalesReportMenu() {
+        String value = InputHelper.readNonEmpty(SCANNER, "Report month (YYYY-MM): ");
+        try {
+            YearMonth month = YearMonth.parse(value);
+            displaySalesReport(TRANSACTION_SERVICE.getMonthlyTransactions(month), "Monthly Sales: " + month);
+        } catch (DateTimeParseException exception) {
+            System.out.println("Invalid month. Use YYYY-MM.");
+        }
+    }
+
+    /** Prints transaction count, revenue, best sellers, and payment breakdown. */
+    private static void displaySalesReport(List<Transaction> records, String title) {
+        System.out.println("\\n===== " + title + " =====");
+        if (records.isEmpty()) {
+            System.out.println("No completed transactions found for this period.");
+            return;
+        }
+        System.out.println("Transaction count: " + records.size());
+        System.out.println("Total revenue: IDR " + TRANSACTION_SERVICE.getRevenue(records).toPlainString());
+
+        System.out.println("Best-selling medicines:");
+        Map<String, Integer> bestSellers = TRANSACTION_SERVICE.getTopSellingMedicines(records);
+        int rank = 1;
+        for (Map.Entry<String, Integer> entry : bestSellers.entrySet()) {
+            System.out.printf("%d. %s - %d unit(s)%n", rank++, entry.getKey(), entry.getValue());
+        }
+
+        System.out.println("Payment method breakdown (transaction count and revenue):");
+        Map<String, BigDecimal> paymentTotals = TRANSACTION_SERVICE.getPaymentBreakdown(records);
+        for (Map.Entry<String, BigDecimal> entry : paymentTotals.entrySet()) {
+            long count = records.stream()
+                    .filter(transaction -> transaction.getPaymentMethod().equals(entry.getKey())).count();
+            System.out.printf("%s: %d transaction(s), IDR %s%n",
+                    entry.getKey(), count, entry.getValue().toPlainString());
+        }
     }
 
     /** Removes a selected medicine from the shopping cart. */
