@@ -11,9 +11,9 @@ public class PrescriptionService {
     private final ArrayList<Prescription> prescriptions = new ArrayList<>();
     private int nextId = 1;
 
-    /** Registers a prescription as pending pharmacist review. */
-    public Prescription submitPrescription(String customerId, String filePath) {
-        Prescription prescription = new Prescription("RX-" + nextId++, customerId, filePath);
+    /** Registers a prescription for a specific medicine as pending review. */
+    public Prescription submitPrescription(String customerId, String medicineId, String filePath) {
+        Prescription prescription = new Prescription("RX-" + nextId++, customerId, medicineId, filePath);
         prescriptions.add(prescription);
         return prescription;
     }
@@ -23,25 +23,27 @@ public class PrescriptionService {
         return new ArrayList<>(prescriptions);
     }
 
-    /** Finds the latest approved prescription for a customer. */
-    public boolean hasApprovedPrescription(String customerId) {
+    /** Checks whether a customer has an approved prescription for a medicine. */
+    public boolean hasApprovedPrescription(String customerId, String medicineId) {
         for (Prescription prescription : prescriptions) {
             if (prescription.getCustomerId().equalsIgnoreCase(customerId)
+                    && prescription.getMedicineId().equalsIgnoreCase(medicineId)
                     && prescription.getStatus() == PrescriptionStatus.APPROVED) return true;
         }
         return false;
     }
 
-    /** Marks one approved prescription as consumed after a successful checkout. */
-    public void consumeApprovedPrescription(String customerId) {
+    /** Marks one approved prescription for a medicine as consumed after checkout. */
+    public void consumeApprovedPrescription(String customerId, String medicineId) {
         for (Prescription prescription : prescriptions) {
             if (prescription.getCustomerId().equalsIgnoreCase(customerId)
+                    && prescription.getMedicineId().equalsIgnoreCase(medicineId)
                     && prescription.getStatus() == PrescriptionStatus.APPROVED) {
                 prescription.setStatus(PrescriptionStatus.CONSUMED);
                 return;
             }
         }
-        throw new IllegalArgumentException("No approved prescription is available for this customer.");
+        throw new IllegalArgumentException("No approved prescription is available for medicine " + medicineId);
     }
 
     /** Updates a prescription to approved or rejected after pharmacist review. */
