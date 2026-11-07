@@ -32,6 +32,18 @@ public class PrescriptionService {
         return false;
     }
 
+    /** Marks one approved prescription as consumed after a successful checkout. */
+    public void consumeApprovedPrescription(String customerId) {
+        for (Prescription prescription : prescriptions) {
+            if (prescription.getCustomerId().equalsIgnoreCase(customerId)
+                    && prescription.getStatus() == PrescriptionStatus.APPROVED) {
+                prescription.setStatus(PrescriptionStatus.CONSUMED);
+                return;
+            }
+        }
+        throw new IllegalArgumentException("No approved prescription is available for this customer.");
+    }
+
     /** Updates a prescription to approved or rejected after pharmacist review. */
     public void reviewPrescription(String prescriptionId, PrescriptionStatus decision) {
         if (decision != PrescriptionStatus.APPROVED && decision != PrescriptionStatus.REJECTED) {
