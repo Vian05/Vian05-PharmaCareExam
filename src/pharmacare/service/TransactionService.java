@@ -72,7 +72,7 @@ public class TransactionService {
     /** Calculates revenue from the final paid totals in a transaction collection. */
     public BigDecimal getRevenue(List<Transaction> records) {
         BigDecimal revenue = BigDecimal.ZERO;
-        for (Transaction transaction : records) revenue = revenue.add(transaction.getTotal());
+        for (Transaction transaction : records) revenue = revenue.add(transaction.getSubtotal());
         return revenue;
     }
 
@@ -97,7 +97,7 @@ public class TransactionService {
     public Map<String, BigDecimal> getPaymentBreakdown(List<Transaction> records) {
         Map<String, BigDecimal> breakdown = new LinkedHashMap<>();
         for (Transaction transaction : records) {
-            breakdown.merge(transaction.getPaymentMethod(), transaction.getTotal(), BigDecimal::add);
+            breakdown.merge(transaction.getPaymentMethod(), transaction.getSubtotal(), BigDecimal::add);
         }
         return breakdown;
     }
