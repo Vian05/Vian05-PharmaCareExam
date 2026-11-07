@@ -22,17 +22,7 @@ public class CheckoutService {
                                PrescriptionService prescriptionService, PaymentMethod paymentMethod) {
         if (customer == null) throw new IllegalArgumentException("Customer cannot be null.");
         if (prescriptionService == null) throw new IllegalArgumentException("Prescription service cannot be null.");
-        validateCartAndPayment(cart, paymentMethod);
-
-        for (CartItem item : cart.getItems()) {
-            if (item.getMedicine() instanceof PrescriptionMedicine
-                    && !prescriptionService.hasApprovedPrescription(customer.getId())) {
-                throw new IllegalArgumentException("An approved prescription is required for Obat Keras.");
-            }
-            if (item.getQuantity() > item.getMedicine().getStock()) {
-                throw new IllegalArgumentException("Insufficient stock for " + item.getMedicine().getName());
-            }
-        }
+        validateCheckout(customer, cart, prescriptionService);
 
         BigDecimal subtotal = cart.getSubtotal();
         BigDecimal fee = paymentMethod.calculateFee(subtotal);
@@ -52,6 +42,25 @@ public class CheckoutService {
         }
         cart.clear();
         return total;
+    }
+
+
+    /** Validates customer identity, prescription approval, and stock before payment. */
+    public void validateCheckout(Customer customer, ShoppingCart cart,
+                                 PrescriptionService prescriptionService) {
+        if (customer == null) throw new IllegalArgumentException("Customer cannot be null.");
+        if (prescriptionService == null) throw new IllegalArgumentException("Prescription service cannot be null.");
+        if (cart == null || cart.isEmpty()) throw new IllegalArgumentException("Shopping cart is empty.");
+
+        for (CartItem item : cart.getItems()) {
+            if (item.getMedicine() instanceof PrescriptionMedicine
+                    && !prescriptionService.hasApprovedPrescription(customer.getId())) {
+                throw new IllegalArgumentException("An approved prescription is required for Obat Keras.");
+            }
+            if (item.getQuantity() > item.getMedicine().getStock()) {
+                throw new IllegalArgumentException("Insufficient stock for " + item.getMedicine().getName());
+            }
+        }
     }
 
     /** Checks that cart and payment method are valid before checkout. */
