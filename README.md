@@ -5,7 +5,7 @@ Java 21 console-based Pharmacy Management System for the LO 3 PharmaCare assignm
 ## Technology and design
 - Java 21
 - Console application (CLI)
-- In-memory data storage using `ArrayList` (implemented in later milestones)
+- In-memory data storage using `ArrayList`
 - Object-oriented programming: encapsulation, inheritance, polymorphism, abstract classes, and interfaces
 - No external dependencies or build tool required
 
@@ -15,8 +15,23 @@ Java 21 console-based Pharmacy Management System for the LO 3 PharmaCare assignm
 src/
 └── pharmacare/
     ├── Main.java
-    └── InputHelper.java
+    ├── InputHelper.java
+    ├── model/
+    │   ├── Medicine.java
+    │   ├── FreeMedicine.java
+    │   ├── LimitedMedicine.java
+    │   ├── PrescriptionMedicine.java
+    │   ├── Customer.java
+    │   ├── CartItem.java
+    │   └── ShoppingCart.java
+    └── service/
+        └── PharmacyService.java
 ```
+
+## Current features
+- Pharmacist: medicine CRUD, restocking, and low-stock report.
+- Customer: browse catalog, add/remove cart items, update quantities, and view cart subtotal.
+- Prescription medicines can be added to the cart; prescription approval is required at checkout and will be implemented in a later milestone.
 
 ## Compile and run
 
@@ -25,18 +40,19 @@ Run these commands from the repository root.
 **macOS / Linux**
 ```bash
 mkdir -p out
-javac -d out src/pharmacare/*.java
+javac -d out $(find src -name "*.java")
 java -cp out pharmacare.Main
 ```
 
-**Windows (Command Prompt)**
-```bat
-if not exist out mkdir out
-javac -d out src\pharmacare\*.java
+**Windows (PowerShell)**
+```powershell
+New-Item -ItemType Directory -Force out
+$files = Get-ChildItem -Recurse src -Filter *.java | ForEach-Object { $_.FullName }
+javac -d out $files
 java -cp out pharmacare.Main
 ```
 
-## Current features\n- Pharmacist: medicine CRUD, restocking, and low-stock report.\n- Customer: browse catalog, add/remove cart items, update quantities, and view cart subtotal.\n- Prescription medicines can be added to the cart; prescription approval is required at checkout and will be implemented in a later milestone.\n\n## Implementation milestones
+## Implementation milestones
 1. Project foundation and console navigation
 2. Medicine model and pharmacist medicine/stock management
 3. Customer catalog and shopping cart
