@@ -22,6 +22,12 @@ public final class InputHelper {
         }
     }
 
+    /** Waits for the user to press Enter without requiring non-empty input. */
+    public static void pause(Scanner scanner, String prompt) {
+        System.out.print(prompt);
+        scanner.nextLine();
+    }
+
     /** Reads an integer within the specified inclusive range. */
     public static int readIntInRange(Scanner scanner, String prompt, int min, int max) {
         while (true) {
