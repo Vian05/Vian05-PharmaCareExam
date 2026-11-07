@@ -285,8 +285,14 @@ public class Main {
 
     /** Registers a simulated prescription file path for pharmacist review. */
     private static void submitPrescriptionMenu(Customer customer) {
+        String medicineId = InputHelper.readNonEmpty(SCANNER, "Medicine ID covered by prescription: ");
+        Medicine medicine = PHARMACY_SERVICE.findMedicine(medicineId);
+        if (!(medicine instanceof PrescriptionMedicine)) {
+            System.out.println("Please enter a valid Obat Keras medicine ID.");
+            return;
+        }
         String filePath = InputHelper.readNonEmpty(SCANNER, "Prescription file path: ");
-        Prescription prescription = PRESCRIPTION_SERVICE.submitPrescription(customer.getId(), filePath);
+        Prescription prescription = PRESCRIPTION_SERVICE.submitPrescription(customer.getId(), medicineId, filePath);
         System.out.println("Prescription submitted. Reference ID: " + prescription.getId());
         System.out.println("Status: PENDING. Pharmacist approval is required before checkout.");
     }
@@ -300,8 +306,9 @@ public class Main {
         }
         System.out.println("\nPrescription ID | Customer ID | File Path | Status");
         for (Prescription prescription : prescriptions) {
-            System.out.printf("%s | %s | %s | %s%n", prescription.getId(),
-                    prescription.getCustomerId(), prescription.getFilePath(), prescription.getStatus());
+            System.out.printf("%s | %s | %s | %s | %s%n", prescription.getId(),
+                    prescription.getCustomerId(), prescription.getMedicineId(),
+                    prescription.getFilePath(), prescription.getStatus());
         }
     }
 
