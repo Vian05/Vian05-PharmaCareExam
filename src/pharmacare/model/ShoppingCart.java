@@ -14,7 +14,7 @@ public class ShoppingCart {
         if (quantity <= 0) throw new IllegalArgumentException("Quantity must be greater than zero.");
 
         CartItem existing = findItem(medicine.getId());
-        int newQuantity = quantity + (existing == null ? 0 : existing.getQuantity());
+        int newQuantity = Math.addExact(quantity, existing == null ? 0 : existing.getQuantity());
         if (newQuantity > medicine.getStock()) {
             throw new IllegalArgumentException("Requested quantity exceeds available stock.");
         }
