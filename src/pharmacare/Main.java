@@ -1,9 +1,12 @@
 package pharmacare;
 
+import pharmacare.model.CartItem;
+import pharmacare.model.Customer;
 import pharmacare.model.FreeMedicine;
 import pharmacare.model.LimitedMedicine;
 import pharmacare.model.Medicine;
 import pharmacare.model.PrescriptionMedicine;
+import pharmacare.model.ShoppingCart;
 import pharmacare.service.PharmacyService;
 
 import java.math.BigDecimal;
@@ -170,10 +173,84 @@ public class Main {
         }
     }
 
-    /** Displays the customer placeholder until customer features are implemented. */
+    /** Starts a customer session with a new in-memory shopping cart. */
     private static void customerMenu() {
-        System.out.println("\n===== CUSTOMER =====");
-        System.out.println("Customer features will be implemented in the next milestone.");
-        InputHelper.pause(SCANNER, "Press Enter to return to the main menu...");
+        String customerName = InputHelper.readNonEmpty(SCANNER, "Customer name: ");
+        Customer customer = new Customer("CUST-001", customerName);
+        ShoppingCart cart = new ShoppingCart();
+        boolean inMenu = true;
+
+        while (inMenu) {
+            System.out.println("\n===== CUSTOMER MENU: " + customer.getName() + " =====");
+            System.out.println("1. View Medicine Catalog");
+            System.out.println("2. Add Medicine to Cart");
+            System.out.println("3. View Shopping Cart");
+            System.out.println("4. Update Cart Quantity");
+            System.out.println("5. Remove Medicine from Cart");
+            System.out.println("0. Back to Main Menu");
+            int choice = InputHelper.readIntInRange(SCANNER, "Select menu: ", 0, 5);
+
+            try {
+                switch (choice) {
+                    case 1 -> displayMedicines(PHARMACY_SERVICE.getAllMedicines());
+                    case 2 -> addToCartMenu(cart);
+                    case 3 -> displayCart(cart);
+                    case 4 -> updateCartMenu(cart);
+                    case 5 -> removeFromCartMenu(cart);
+                    case 0 -> inMenu = false;
+                    default -> System.out.println("Invalid menu selection.");
+                }
+            } catch (IllegalArgumentException | ArithmeticException exception) {
+                System.out.println("Operation failed: " + exception.getMessage());
+            }
+        }
+    }
+
+    /** Adds a selected catalog medicine to the shopping cart. */
+    private static void addToCartMenu(ShoppingCart cart) {
+        displayMedicines(PHARMACY_SERVICE.getAllMedicines());
+        String id = InputHelper.readNonEmpty(SCANNER, "Medicine ID to add: ");
+        Medicine medicine = PHARMACY_SERVICE.findMedicine(id);
+        if (medicine == null) {
+            System.out.println("Medicine not found.");
+            return;
+        }
+        int quantity = InputHelper.readIntInRange(SCANNER, "Quantity: ", 1, Integer.MAX_VALUE);
+        cart.addMedicine(medicine, quantity);
+        System.out.println("Medicine added to cart.");
+        if (medicine instanceof PrescriptionMedicine) {
+            System.out.println("Notice: This medicine requires an approved prescription before checkout.");
+        }
+    }
+
+    /** Displays cart items and the subtotal before payment fees. */
+    private static void displayCart(ShoppingCart cart) {
+        if (cart.isEmpty()) {
+            System.out.println("Your shopping cart is empty.");
+            return;
+        }
+        System.out.println("\nMedicine | Quantity | Unit Price (IDR) | Subtotal (IDR)");
+        System.out.println("------------------------------------------------------");
+        for (CartItem item : cart.getItems()) {
+            System.out.printf("%s | %d | %s | %s%n", item.getMedicine().getName(),
+                    item.getQuantity(), item.getMedicine().getPrice().toPlainString(),
+                    item.getSubtotal().toPlainString());
+        }
+        System.out.println("Cart subtotal: IDR " + cart.getSubtotal().toPlainString());
+    }
+
+    /** Updates the quantity of a medicine already in the cart. */
+    private static void updateCartMenu(ShoppingCart cart) {
+        String id = InputHelper.readNonEmpty(SCANNER, "Medicine ID to update: ");
+        int quantity = InputHelper.readIntInRange(SCANNER, "New quantity: ", 1, Integer.MAX_VALUE);
+        cart.updateQuantity(id, quantity);
+        System.out.println("Cart quantity updated.");
+    }
+
+    /** Removes a selected medicine from the shopping cart. */
+    private static void removeFromCartMenu(ShoppingCart cart) {
+        String id = InputHelper.readNonEmpty(SCANNER, "Medicine ID to remove: ");
+        System.out.println(cart.removeMedicine(id)
+                ? "Medicine removed from cart." : "Medicine was not found in the cart.");
     }
 }
