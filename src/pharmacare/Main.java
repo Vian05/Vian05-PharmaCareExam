@@ -305,7 +305,7 @@ public class Main {
             System.out.println("No prescriptions submitted.");
             return;
         }
-        System.out.println("\nPrescription ID | Customer ID | File Path | Status");
+        System.out.println("\nPrescription ID | Customer ID | Medicine ID | File Path | Status");
         for (Prescription prescription : prescriptions) {
             System.out.printf("%s | %s | %s | %s | %s%n", prescription.getId(),
                     prescription.getCustomerId(), prescription.getMedicineId(),
@@ -366,7 +366,7 @@ public class Main {
             System.out.println("No transaction history found.");
             return;
         }
-        System.out.println("\\nTransaction ID | Date/Time | Payment | Total (IDR) | Status");
+        System.out.println("\nTransaction ID | Date/Time | Payment | Total (IDR) | Status");
         for (Transaction transaction : history) {
             System.out.printf("%s | %s | %s | %s | %s%n", transaction.getId(),
                     transaction.getDateTime(), transaction.getPaymentMethod(),
@@ -402,7 +402,7 @@ public class Main {
 
     /** Prints transaction count, revenue, best sellers, and payment breakdown. */
     private static void displaySalesReport(List<Transaction> records, String title) {
-        System.out.println("\\n===== " + title + " =====");
+        System.out.println("\n===== " + title + " =====");
         if (records.isEmpty()) {
             System.out.println("No completed transactions found for this period.");
             return;
